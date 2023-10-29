@@ -2,3 +2,4 @@ build
 .vscode
 .devcontainer
 main/constants.h
+.DS_Store

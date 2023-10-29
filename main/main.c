@@ -14,6 +14,9 @@
 #include "freertos/queue.h"
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
+#include "freertos/timers.h"
+
+#define BUTTON_PRESS_TIMER_MS 100
 
 #define PREV_SONG_BUTTON_PIN 14
 #define PAUSE_PLAY_BUTTON_PIN 15
@@ -22,19 +25,16 @@
 #define VOLUME_DOWN_BUTTON_PIN 12
 #define VOLUME_UP_BUTTON_PIN 13
 
+//                  D0, D1, D2, D3, D4, D5, D6, D7, RS, RW, E
+uint8_t pins[11] = {26, 27, 23, 22, 21, 19, 18, 17, 32, 33, 25};
+uint32_t button_pins[5] = {PAUSE_PLAY_BUTTON_PIN, NEXT_SONG_BUTTON_PIN, PREV_SONG_BUTTON_PIN, VOLUME_UP_BUTTON_PIN, VOLUME_DOWN_BUTTON_PIN};
+
 static const char *TAG = "main";
 
 SemaphoreHandle_t xSemaphore;
 
 song_t current_song = {};
-
-//                  D0, D1, D2, D3, D4, D5, D6, D7, RS, RW, E
-uint8_t pins[11] = {26, 27, 23, 22, 21, 19, 18, 17, 32, 33, 25};
-
-uint32_t button_pins[5] = {PAUSE_PLAY_BUTTON_PIN, NEXT_SONG_BUTTON_PIN, PREV_SONG_BUTTON_PIN, VOLUME_UP_BUTTON_PIN, VOLUME_DOWN_BUTTON_PIN};
-
 TaskHandle_t song_update_task_handle = NULL;
-
 void song_update_task(void *arg)
 {
   while (1)
@@ -86,11 +86,18 @@ void song_update_task(void *arg)
 }
 
 QueueHandle_t interrupt_queue;
+TimerHandle_t button_press_timer;
+int button_pin_pressed;
+
+void button_press_timer_callback()
+{
+  xQueueSendFromISR(interrupt_queue, &button_pin_pressed, NULL);
+}
 
 static void IRAM_ATTR gpio_interrupt_handler(void *args)
 {
-  int pin_number = (int)args;
-  xQueueSendFromISR(interrupt_queue, &pin_number, NULL);
+  button_pin_pressed = (int)args;
+  xTimerStart(button_press_timer, 0);
 }
 
 void button_control_task(void *params)
@@ -100,7 +107,7 @@ void button_control_task(void *params)
   {
     if (xQueueReceive(interrupt_queue, &pin_number, portMAX_DELAY))
     {
-      if (!logged_in)
+      if (!logged_in || gpio_get_level(pin_number) == 0)
       {
         continue;
       }
@@ -108,12 +115,15 @@ void button_control_task(void *params)
       switch (pin_number)
       {
       case PAUSE_PLAY_BUTTON_PIN:
+        ESP_LOGI(TAG, "play / pause song");
         err = player_pause_play(&current_song);
         break;
       case PREV_SONG_BUTTON_PIN:
+        ESP_LOGI(TAG, "prev song");
         err = player_next_prev_song(PREV_SONG);
         break;
       case NEXT_SONG_BUTTON_PIN:
+        ESP_LOGI(TAG, "next song");
         err = player_next_prev_song(NEXT_SONG);
         break;
       case VOLUME_UP_BUTTON_PIN:
@@ -167,6 +177,7 @@ void app_main(void)
         button_setup(button_pins[i]);
       }
 
+      button_press_timer = xTimerCreate("button_press_timer", pdMS_TO_TICKS(BUTTON_PRESS_TIMER_MS), pdFALSE, 0, button_press_timer_callback);
       interrupt_queue = xQueueCreate(10, sizeof(int));
       xTaskCreate(button_control_task, "button_control_task", 16384, NULL, 1, NULL);
 
