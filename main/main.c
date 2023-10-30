@@ -81,7 +81,7 @@ void song_update_task(void *arg)
       lcd_set_cursor_position(1, 1);
       lcd_string((unsigned char *)"Login");
     }
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 

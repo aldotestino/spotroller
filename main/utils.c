@@ -33,7 +33,7 @@ void button_setup(uint32_t button_pin)
 
   gpio_pad_select_gpio(button_pin);
   gpio_set_direction(button_pin, GPIO_MODE_INPUT);
-  gpio_pulldown_en(button_pin);
-  gpio_pullup_dis(button_pin);
+  gpio_pulldown_dis(button_pin);
+  gpio_pullup_en(button_pin);
   gpio_set_intr_type(button_pin, GPIO_INTR_POSEDGE);
 }
