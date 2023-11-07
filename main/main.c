@@ -26,7 +26,7 @@
 #define VOLUME_UP_BUTTON_PIN 13
 
 //                  D0, D1, D2, D3, D4, D5, D6, D7, RS, RW, E
-uint8_t pins[11] = {26, 27, 23, 22, 21, 19, 18, 17, 32, 33, 25};
+uint8_t lcd_pins[11] = {26, 27, 23, 22, 21, 19, 18, 17, 32, 33, 25};
 uint32_t button_pins[5] = {PAUSE_PLAY_BUTTON_PIN, NEXT_SONG_BUTTON_PIN, PREV_SONG_BUTTON_PIN, VOLUME_UP_BUTTON_PIN, VOLUME_DOWN_BUTTON_PIN};
 
 static const char *TAG = "main";
@@ -34,8 +34,8 @@ static const char *TAG = "main";
 SemaphoreHandle_t xSemaphore;
 
 song_t current_song = {};
-TaskHandle_t song_update_task_handle = NULL;
-void song_update_task(void *arg)
+TaskHandle_t app_update_task_handle = NULL;
+void app_update_task(void *arg)
 {
   while (1)
   {
@@ -46,7 +46,7 @@ void song_update_task(void *arg)
       if (res != ESP_OK)
       {
         ESP_LOGE(TAG, "failed to request access token");
-        vTaskDelete(song_update_task_handle);
+        vTaskDelete(app_update_task_handle);
         client_cleanup();
       }
       logged_in = 1;
@@ -63,7 +63,7 @@ void song_update_task(void *arg)
         if (res != ESP_OK)
         {
           ESP_LOGE(TAG, "failed to refresh access token");
-          vTaskDelete(song_update_task_handle);
+          vTaskDelete(app_update_task_handle);
           client_cleanup();
         }
       }
@@ -162,7 +162,7 @@ void app_main(void)
       client_init();
 
       ESP_LOGI(TAG, "initializing LCD");
-      lcd_init(pins);
+      lcd_init(lcd_pins);
 
       vTaskDelay(100 / portTICK_PERIOD_MS);
 
@@ -205,7 +205,7 @@ void app_main(void)
         break;
       }
 
-      xTaskCreate(song_update_task, "song_update_task", 16384, NULL, 1, &song_update_task_handle);
+      xTaskCreate(app_update_task, "app_update_task", 16384, NULL, 1, &app_update_task_handle);
     }
   }
 }
