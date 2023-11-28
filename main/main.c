@@ -72,7 +72,9 @@ void app_update_task(void *arg)
       if (err != ESP_OK)
       {
         lcd_set_cursor_position(1, 1);
-        lcd_string((unsigned char *)"Play something");
+        lcd_string((unsigned char *)"Play something  ");
+        lcd_set_cursor_position(2, 1);
+        lcd_string((unsigned char *)"on Spotify!     ");
         continue;
       }
 
