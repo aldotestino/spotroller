@@ -2,20 +2,20 @@
 
 static const char *TAG = "Error";
 
-uint8_t lcd_pins[11];
+uint8_t pins[11];
 
-void lcd_init(uint8_t *pins)
+void lcd_init(uint8_t *_pins)
 {
   for (int i = 0; i < 11; i++)
   {
-    lcd_pins[i] = pins[i];
+    pins[i] = _pins[i];
   }
 
   // initialize pins
   for (int i = 0; i < 11; i++)
   {
-    gpio_pad_select_gpio(lcd_pins[i]);
-    gpio_set_direction(lcd_pins[i], GPIO_MODE_OUTPUT);
+    gpio_pad_select_gpio(pins[i]);
+    gpio_set_direction(pins[i], GPIO_MODE_OUTPUT);
   }
 
   lcd_cmd(0x38); // configure lcd in 8 bit mode
@@ -71,29 +71,29 @@ void lcd_decode(unsigned char info)
   for (int i = 0; i < 8; i++)
   {
     temp = pow(2, i);
-    gpio_set_level(lcd_pins[i], (info & temp));
+    gpio_set_level(pins[i], (info & temp));
   }
 }
 
 void lcd_cmd(unsigned char cmd)
 {
   lcd_decode(cmd);
-  gpio_set_level(lcd_pins[8], 0);
-  gpio_set_level(lcd_pins[9], 0);
-  gpio_set_level(lcd_pins[10], 1);
+  gpio_set_level(pins[8], 0);
+  gpio_set_level(pins[9], 0);
+  gpio_set_level(pins[10], 1);
   vTaskDelay(10 / portTICK_PERIOD_MS);
-  gpio_set_level(lcd_pins[10], 0);
+  gpio_set_level(pins[10], 0);
   // vTaskDelay(10 / portTICK_PERIOD_MS);
 }
 
 void lcd_data(unsigned char data)
 {
   lcd_decode(data);
-  gpio_set_level(lcd_pins[8], 1);
-  gpio_set_level(lcd_pins[9], 0);
-  gpio_set_level(lcd_pins[10], 1);
+  gpio_set_level(pins[8], 1);
+  gpio_set_level(pins[9], 0);
+  gpio_set_level(pins[10], 1);
   vTaskDelay(10 / portTICK_PERIOD_MS);
-  gpio_set_level(lcd_pins[10], 0);
+  gpio_set_level(pins[10], 0);
   // vTaskDelay(10 / portTICK_PERIOD_MS);
 }
 

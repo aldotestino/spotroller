@@ -1,11 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include "mbedtls/md.h"
 #include "server.h"
 #include "auth.h"
-#include "esp_log.h"
 
 static const char *TAG = "server";
 
@@ -15,11 +9,11 @@ esp_err_t get_index_handler(httpd_req_t *req)
 {
   if (logged_in)
   {
-    httpd_resp_send(req, logout_page, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send(req, LOGOUT_PAGE, HTTPD_RESP_USE_STRLEN);
   }
   else
   {
-    httpd_resp_send(req, login_page, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send(req, LOGIN_PAGE, HTTPD_RESP_USE_STRLEN);
   }
   return ESP_OK;
 }

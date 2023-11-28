@@ -71,6 +71,8 @@ void app_update_task(void *arg)
       esp_err_t err = player_get_current_song(&current_song);
       if (err != ESP_OK)
       {
+        lcd_set_cursor_position(1, 1);
+        lcd_string((unsigned char *)"Play something");
         continue;
       }
 
@@ -79,7 +81,9 @@ void app_update_task(void *arg)
     else
     {
       lcd_set_cursor_position(1, 1);
-      lcd_string((unsigned char *)"Login");
+      lcd_string((unsigned char *)"Login at:       ");
+      lcd_set_cursor_position(2, 1);
+      lcd_string(get_ip_address());
     }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
@@ -135,8 +139,10 @@ void button_control_task(void *params)
         err = player_set_volume(&current_song, 0);
         break;
       default:
+        err = ESP_FAIL;
         break;
       }
+      ESP_LOGE(TAG, "error: %s", esp_err_to_name(err));
     }
   }
 }
@@ -166,7 +172,7 @@ void app_main(void)
 
       vTaskDelay(100 / portTICK_PERIOD_MS);
 
-      lcd_string((unsigned char *)"Welcome!");
+      lcd_string((unsigned char *)"Welcome!        ");
 
       vTaskDelay(1000 / portTICK_PERIOD_MS);
       lcd_clear();

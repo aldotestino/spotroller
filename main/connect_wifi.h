@@ -1,6 +1,3 @@
-#ifndef CONNECT_WIFI_H_
-#define CONNECT_WIFI_H_
-
 #include <esp_system.h>
 #include <nvs_flash.h>
 #include "freertos/FreeRTOS.h"
@@ -20,5 +17,4 @@
 extern int wifi_connect_status;
 
 void connect_wifi(void);
-
-#endif
+unsigned char *get_ip_address(void);
